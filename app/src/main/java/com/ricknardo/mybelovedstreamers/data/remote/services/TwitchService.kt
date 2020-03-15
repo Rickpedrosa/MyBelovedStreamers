@@ -2,6 +2,7 @@ package com.ricknardo.mybelovedstreamers.data.remote.services
 
 import com.ricknardo.mybelovedstreamers.data.remote.repos.TwitchRepository
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
@@ -16,13 +17,15 @@ class TwitchService {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(URL_BASE)
-                .client(chainHeaders())
+                .client(chainBodyInterceptor())
                 .build()
 
             return retrofit.create(TwitchRepository::class.java)
         }
 
-        private fun chainHeaders(): OkHttpClient {
+        private fun chainBodyInterceptor(): OkHttpClient {
+            val bodyInterceptor = HttpLoggingInterceptor()
+            bodyInterceptor.level = HttpLoggingInterceptor.Level.BODY
             return OkHttpClient.Builder()
                 .addInterceptor {
                     it.proceed(
@@ -30,7 +33,10 @@ class TwitchService {
                             "Client-ID", CLIENT_ID
                         ).build()
                     )
-                }.build()
+                }
+                .addInterceptor(bodyInterceptor)
+                .build()
+
         }
     }
 }

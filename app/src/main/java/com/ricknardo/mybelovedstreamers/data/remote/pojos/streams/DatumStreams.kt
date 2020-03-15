@@ -6,7 +6,9 @@ data class DatumStreams (
     @SerializedName("id") val id : Long,
     @SerializedName("user_id") val user_id : Long,
     @SerializedName("user_name") val user_name : String,
-    @SerializedName("game_id") val game_id : Int,
+    //todo por culpa de Amouranth game_id debe ser string en vez de long porque no le pone categoria
+    //todo a su sleeping streaming =/
+    @SerializedName("game_id") val game_id : String,
     @SerializedName("type") val type : String,
     @SerializedName("title") val title : String,
     @SerializedName("viewer_count") val viewer_count : Int,

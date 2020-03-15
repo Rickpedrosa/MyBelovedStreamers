@@ -7,10 +7,11 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 interface TwitchRepository {
     @GET("streams")
-    fun getStream(@Query("user_id") user_id: String): Observable<Streams>
+    fun getStream(@Query("user_id") users: List<String>): Observable<Streams>
 
     @GET("users/follows")
     fun getFollowedStreams(
