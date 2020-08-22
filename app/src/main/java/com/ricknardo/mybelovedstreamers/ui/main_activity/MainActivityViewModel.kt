@@ -1,30 +1,59 @@
 package com.ricknardo.mybelovedstreamers.ui.main_activity
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import com.ricknardo.mybelovedstreamers.base.downgrade.prefs.Prefs
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.follows.DatumFollows
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.follows.UserFollowedStreams
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.streams.DatumStreams
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.streams.Pagination
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.streams.Streams
 import com.ricknardo.mybelovedstreamers.data.remote.services.TwitchService
+import com.ricknardo.mybelovedstreamers.data.remote.services.TwitchServiceWithOauth
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposables
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import kotlin.collections.HashSet
 
-class MainActivityViewModel : ViewModel() {
-    private val twitch = TwitchService.create()
-    private var disposable = Disposables.empty()
+class MainActivityViewModel(application: Application) : AndroidViewModel(application) {
+    private val twitch = TwitchService.create(getApplication())
+    private val twitchTokenService = TwitchServiceWithOauth.create()
+    private var disposable = CompositeDisposable()
     private val myTwitchStreamersOnline: MutableLiveData<List<DatumStreams>> =
         MutableLiveData(listOf())
+    private val applicationToastMessager: MutableLiveData<String> = MutableLiveData()
+     val applicateToastMessagerLiveData : LiveData<String>
+        get() {
+            return applicationToastMessager
+        }
 
-    fun letsgo(login: String = "altairx12") {
-        disposable = twitch.getUserInfo(login)
+    fun storeTwitchToken() {
+        disposable.add(
+            twitchTokenService.getOauthTwitchToken()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        Prefs(getApplication()).token = it.access_token
+                        applicationToastMessager.postValue(it.access_token)
+                    },
+                    {
+                        Log.d("tokenError", it.message.toString())
+                        applicationToastMessager.postValue(it.message.toString())
+                    },
+                    {
+
+                    })
+        )
+    }
+
+    fun retrieveOnlineStreamers(login: String = "altairx12") {
+        disposable.add(twitch.getUserInfo(login)
             .flatMap { letsGetAllFollows(it.data[0].id.toString(), "") }
             .flatMap { buildStreamersObservable(it.data) }
             .subscribeOn(Schedulers.io())
@@ -36,8 +65,8 @@ class MainActivityViewModel : ViewModel() {
                         Log.d("OMEGALOL", "the size is ${it.data.size}")
                     } else Log.d("OMEGALOL", "NO VE NA HULIO 0 CONECTEDXD")
                 },
-                { Log.d("OMEGAERROR", it.message) }
-            )
+                { Log.d("OMEGAERROR", it.message.toString()) }
+            ))
     }
 
     private fun buildFollowsUrl(follows: List<DatumFollows>): List<String> {

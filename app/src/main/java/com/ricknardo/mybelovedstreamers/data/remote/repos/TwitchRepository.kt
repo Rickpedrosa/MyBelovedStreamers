@@ -4,10 +4,8 @@ import com.ricknardo.mybelovedstreamers.data.remote.pojos.follows.UserFollowedSt
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.streams.Streams
 import com.ricknardo.mybelovedstreamers.data.remote.pojos.userinfo.UserInfo
 import io.reactivex.Observable
-import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Query
-import retrofit2.http.QueryMap
 
 interface TwitchRepository {
     @GET("streams")
